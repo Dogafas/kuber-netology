@@ -1,0 +1,28 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-deploy-task2
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: nginx-task2
+  template:
+    metadata:
+      labels:
+        app: nginx-task2
+    spec:
+      initContainers:
+        - name: wait-for-service
+          image: busybox
+          command:
+            [
+              "sh",
+              "-c",
+              "until nslookup nginx-svc-task2.default.svc.cluster.local; do echo waiting for service; sleep 2; done",
+            ]
+      containers:
+        - name: nginx
+          image: nginx:latest
+          ports:
+            - containerPort: 80

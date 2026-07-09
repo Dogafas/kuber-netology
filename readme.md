@@ -1,4 +1,4 @@
-# Задание: Deployment и доступ к репликам приложения
+# Задание 1. Создать Deployment и обеспечить доступ к репликам приложения из другого Pod
 
 ## 1. Создание Deployment
 Файл: [deployment.yaml](deployment.yaml)
@@ -19,3 +19,13 @@
 ![alt text](image-1.png)
 
 P.S. был создан Deployment с двумя контейнерами, масштабирован до двух реплик, подключён через Service и успешно проверен доступ к обоим контейнерам из отдельного Pod multitool
+
+# Задание 2. Создать Deployment и обеспечить старт основного контейнера при выполнении условий
+
+Файлы:
+- [deployment-task2.yaml](deployment-task2.yaml)
+- [service-task2.yaml](service-task2.yaml)
+
+[Deployment](deployment-task2.yaml) с Init‑контейнером блокировал запуск nginx до появления [Service](service-task2.yaml). После создания Service Init завершился, и nginx успешно запустился.
+
+![alt text](image-2.png)
