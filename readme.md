@@ -1,31 +1,61 @@
 # Задание 1. Создать Deployment и обеспечить доступ к репликам приложения из другого Pod
 
-## 1. Создание Deployment
-Файл: [deployment.yaml](deployment.yaml)
+1. Создать Deployment и обеспечить доступ к контейнерам приложения по разным портам из другого Pod внутри кластера
 
-## 2. Создание Service
-Файл: [service.yaml](service.yaml)
+    * (я использовал microk8s, можно выполнить все команды про порядку)
 
-## 3. Создание Pod
-Файл: [multitool-pod.yaml](multitool-pod.yaml)
+### Запуск [Deployment](deployment-task3.yaml)
 
+```
+microk8s kubectl apply -f deployment-task3.yaml
+```
 
-Создаем Deployment, проверяем Pod, масштабируем Deployment до 2 шт, создаем Service, создаём Pod multitool-client,.... 
+### Запуск [Service](service-task3.yaml)
 
-![alt text](image.png)
+```
+microk8s kubectl apply -f service-task3.yaml
+```
 
-...(pod netology-deploy-7b766fd89c-gp46b скачался и запустился не сразу...)... проверяем доступ из multitool-client
+### Запуск [Pod](multitool-pod.yaml)
+
+```
+microk8s kubectl apply -f multitool-pod.yaml
+```
+
+### Проверки
+
+```
+# 3 Pod с двумя контейнерами + Pod multitool‑client
+
+microk8s kubectl get pods
+```
+
+```
+# сервис с портами 9001 и 9002.
+
+microk8s kubectl get svc
+```
+
+```
+# страница nginx на 9001 порту ⤵
+
+microk8s kubectl exec -it multitool-client -- curl nginx-svc-task3:9001
+
+# страница multitool на 9002 порту ⤵
+
+microk8s kubectl exec -it multitool-client -- curl nginx-svc-task3:9002
+```
+
+### Удаление
+
+```
+microk8s kubectl delete deployments,pods --all
+```
+
+#### screenshot №1
+
+![alt text](image.png))
+
+#### screenshot №2
 
 ![alt text](image-1.png)
-
-P.S. был создан Deployment с двумя контейнерами, масштабирован до двух реплик, подключён через Service и успешно проверен доступ к обоим контейнерам из отдельного Pod multitool
-
-# Задание 2. Создать Deployment и обеспечить старт основного контейнера при выполнении условий
-
-Файлы:
-- [deployment-task2.yaml](deployment-task2.yaml)
-- [service-task2.yaml](service-task2.yaml)
-
-[Deployment](deployment-task2.yaml) с Init‑контейнером блокировал запуск nginx до появления [Service](service-task2.yaml). После создания Service Init завершился, и nginx успешно запустился.
-
-![alt text](image-2.png)
