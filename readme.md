@@ -74,13 +74,12 @@ http://192.168.3.111:30080
 
 ```
 microk8s kubectl delete -f deployment-task3.yaml
-
 microk8s kubectl delete -f service-task3.yaml
-
 microk8s kubectl delete -f service-nodeport.yaml
-
 microk8s kubectl delete -f multitool-pod.yaml
 ```
+
+## Далее скриншоты с выполненными командами по порядку ⤵
 
 #### screenshot №1
 
@@ -94,5 +93,5 @@ microk8s kubectl delete -f multitool-pod.yaml
 ![alt text](image-2.png)
 
 #### screenshot №4 
-* (команда curl 192.168.3.111:30080 не работает из-за настроек vpn (не хотел отключать vpn, чтобы продемонстировать, но через браузер работает при отключеном vpn))
+* (команда curl 192.168.3.111:30080 не работает из-за настроек vpn (не хотелось отключать vpn, чтобы продемонстировать, но через браузер работает при отключеном vpn ⤴ ))
 ![alt text](image.png)
