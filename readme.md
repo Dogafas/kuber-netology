@@ -158,4 +158,4 @@ microk8s kubectl delete -f configmap-backend.yaml
 
 ![alt text](image-5.png)
 
-*P.S. [configmap-backend.yaml](configmap-backend.yaml) создан для того, чтобы хранить тестовую HTML‑страницу и примонтировать её в контейнер backend, чтобы при обращении к пути /api/ nginx внутри Pod отдавал этот файл вместо ошибки 404*
+*P.S. `configmap-backend.yaml` создан для того, чтобы хранить тестовую HTML‑страницу и примонтировать её в контейнер `backend`, чтобы при обращении к пути `/api/` nginx внутри Pod отдавал этот файл вместо ошибки 404*
