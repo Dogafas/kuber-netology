@@ -61,6 +61,10 @@ microk8s kubectl get nodes -o wide
 
 curl 192.168.3.111:30080
 
+либо в браузере
+
+http://192.168.3.111:30080
+
 ```
 
 
@@ -80,11 +84,15 @@ microk8s kubectl delete -f multitool-pod.yaml
 
 #### screenshot №1
 
-![alt text](image.png))
+![alt text](image-3.png)
 
 #### screenshot №2
 
-![alt text](image-1.png)
+![alt text](image-4.png)
 
 #### screenshot №3
 ![alt text](image-2.png)
+
+#### screenshot №4 
+* (команда curl 192.168.3.111:30080 не работает из-за настроек vpn (не хотел отключать vpn, чтобы продемонстировать, но через браузер работает при отключеном vpn))
+![alt text](image.png)
