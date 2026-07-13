@@ -1,4 +1,4 @@
-# Задание 1. Создать Deployment и обеспечить доступ к репликам приложения из другого Pod
+# Задание 1: Настройка Service (ClusterIP и NodePort)
 
 1. Создать Deployment и обеспечить доступ к контейнерам приложения по разным портам из другого Pod внутри кластера
 
@@ -20,6 +20,12 @@ microk8s kubectl apply -f service-task3.yaml
 
 ```
 microk8s kubectl apply -f multitool-pod.yaml
+```
+
+### Запуск [NodePort‑манифест](multitool-pod.yaml)
+
+```
+microk8s kubectl apply -f service-nodeport.yaml
 ```
 
 ### Проверки
@@ -46,10 +52,30 @@ microk8s kubectl exec -it multitool-client -- curl nginx-svc-task3:9001
 microk8s kubectl exec -it multitool-client -- curl nginx-svc-task3:9002
 ```
 
-### Удаление
+```
+# узнать IP ноды
+microk8s kubectl get nodes -o wide
+
+# пример: Internal-IP = 192.168.3.111
+# проверить доступ к nginx через NodePort 30080
+
+curl 192.168.3.111:30080
 
 ```
-microk8s kubectl delete deployments,pods --all
+
+
+
+
+### Удаление ресурсов
+
+```
+microk8s kubectl delete -f deployment-task3.yaml
+
+microk8s kubectl delete -f service-task3.yaml
+
+microk8s kubectl delete -f service-nodeport.yaml
+
+microk8s kubectl delete -f multitool-pod.yaml
 ```
 
 #### screenshot №1
@@ -59,3 +85,6 @@ microk8s kubectl delete deployments,pods --all
 #### screenshot №2
 
 ![alt text](image-1.png)
+
+#### screenshot №3
+![alt text](image-2.png)
