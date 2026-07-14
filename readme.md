@@ -165,3 +165,68 @@ cat /mnt/pv-data/data.txt
 # удалить папку  на ноде
 sudo rm -rf /mnt/pv-data
 ```
+
+# Задание 3. StorageClass
+
+1. Создать Deployment приложения, использующего PVC, созданный на основе StorageClass.
+
+Манифесты:
+* [sc.yaml](sc.yaml) — StorageClass и PVC.
+* [pv-sc.yaml](pv-sc.yaml) — PersistentVolume, соответствующий StorageClass.
+* [containers-sc-data-exchange.yaml](containers-sc-data-exchange.yaml) — Deployment с двумя контейнерами (busybox и multitool), использующими PVC.
+
+Подготовка директории на ноде:
+
+```
+sudo mkdir -p /mnt/pv-data-sc
+sudo chmod 777 /mnt/pv-data-sc
+```
+Создать StorageClass и PVC:
+
+```
+microk8s kubectl apply -f sc.yaml
+microk8s kubectl get sc
+microk8s kubectl get pvc
+```
+
+Создать PV, соответствующий StorageClass:
+
+```
+microk8s kubectl apply -f pv-sc.yaml
+microk8s kubectl get pv
+microk8s kubectl get pvc
+```
+
+Создать Deployment:
+
+```
+microk8s kubectl apply -f containers-sc-data-exchange.yaml
+microk8s kubectl get pods
+microk8s kubectl describe pod data-exchange-sc-<id>
+```
+
+Проверить работу контейнеров:
+
+```
+microk8s kubectl exec -it deploy/data-exchange-sc -c reader -- sh
+#  Внутри контейнера выполнить:
+tail -f /shared/data.txt
+```
+Проверить файл на ноде:
+
+```
+cat /mnt/pv-data-sc/data.txt
+```
+
+Объяснение поведения:
+
+- StorageClass с kubernetes.io/no-provisioner не создаёт PV автоматически.
+
+- PVC остаётся Pending, пока вручную не создан PV с storageClassName: local-storage.
+
+- После создания PV PVC становится Bound, Pod запускается.
+
+- Busybox пишет строки в файл /shared/data.txt, multitool читает их.
+
+- Данные сохраняются в директории /mnt/pv-data-sc на ноде.
+
