@@ -37,3 +37,10 @@ curl http://localhost:8080
 ### Screenshot
 
 ![alt text](image.png)
+
+##### Удалить
+
+```
+microk8s kubectl delete -f deployment.yaml
+microk8s kubectl delete -f configmap-web.yaml
+```
