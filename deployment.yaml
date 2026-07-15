@@ -1,0 +1,35 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: web-app
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: web-app
+  template:
+    metadata:
+      labels:
+        app: web-app
+    spec:
+      containers:
+      - name: nginx
+        image: nginx:latest
+        ports:
+        - containerPort: 80
+        volumeMounts:
+        - name: web-content-volume
+          mountPath: /usr/share/nginx/html
+      - name: multitool
+        image: wbitt/network-multitool
+        command: ["/bin/sh", "-c"]
+        args: ["sleep 3600"]
+        ports:
+        - containerPort: 8080
+        volumeMounts:
+        - name: web-content-volume
+          mountPath: /mnt/web
+      volumes:
+      - name: web-content-volume
+        configMap:
+          name: web-content
