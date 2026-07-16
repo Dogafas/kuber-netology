@@ -137,4 +137,65 @@ microk8s kubectl delete -f configmap-web.yaml
 
 1. Создать пользователя с ограниченными правами (только просмотр логов и описания подов).
 
-###
+### Включить RBAC
+```
+microk8s enable rbac
+```
+
+### Сгенерировать сертификат для пользователя developer
+```
+openssl genrsa -out developer.key 2048
+openssl req -new -key developer.key -out developer.csr -subj "/CN=developer"
+openssl x509 -req -in developer.csr \
+  -CA /var/snap/microk8s/current/certs/ca.crt \
+  -CAkey /var/snap/microk8s/current/certs/ca.key \
+  -CAcreateserial -out developer.crt -days 365
+```
+
+### Создать [ConfigMap](configmap-web.yaml) (сделать ДО деплоймента)
+```
+microk8s kubectl apply -f configmap-web.yaml
+```
+
+### Создать [Deployment](deployment.yaml)
+```
+microk8s kubectl apply -f deployment.yaml
+```
+
+### Применить [Role](role-pod-reader.yaml) и [RoleBinding](rolebinding-developer.yaml)
+
+```
+microk8s kubectl apply -f role-pod-reader.yaml
+
+microk8s kubectl apply -f rolebinding-developer.yaml
+```
+
+### Проверка доступа от имени developer
+```
+microk8s kubectl get pods --as=developer
+
+microk8s kubectl describe pod <имя-pod> --as=developer
+
+microk8s kubectl logs <имя-pod> --as=developer
+```
+
+### Проверка ограничений (должна быть ошибка forbidden)
+```
+microk8s kubectl delete pod <имя-pod> --as=developer
+```
+### Screenshot
+![alt text](image-2.png)
+
+
+### Удаление ресурсов
+```
+microk8s kubectl delete -f ingress-tls.yaml
+microk8s kubectl delete -f ingress-http.yaml
+microk8s kubectl delete -f secret-tls.yaml
+microk8s kubectl delete -f web-app-service.yaml
+microk8s kubectl delete -f deployment.yaml
+microk8s kubectl delete -f configmap-web.yaml
+microk8s kubectl delete -f rolebinding-developer.yaml
+microk8s kubectl delete -f role-pod-reader.yaml
+rm developer.key developer.csr developer.crt
+```
