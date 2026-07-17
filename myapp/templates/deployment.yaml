@@ -1,0 +1,26 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Release.Name }}-web
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      app: {{ .Release.Name }}-web
+  template:
+    metadata:
+      labels:
+        app: {{ .Release.Name }}-web
+    spec:
+      containers:
+        - name: nginx
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          ports:
+            - containerPort: 80
+        - name: multitool
+          image: "{{ .Values.multitool.repository }}:{{ .Values.multitool.tag }}"
+          imagePullPolicy: {{ .Values.multitool.pullPolicy }}
+          command: ["/bin/sh", "-c", "sleep 3600"]
+          ports:
+            - containerPort: 8080
