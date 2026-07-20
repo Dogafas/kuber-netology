@@ -70,6 +70,10 @@ curl http://myapp.example.com
 curl -k --noproxy '*' https://myapp.example.com
 ```
 
+### Скриншоты
+![alt text](image-2.png)
+продолжение скриншота ...
+![alt text](image-3.png)
 ---
 
 ## Задание 2. Запустить две версии в разных неймспейсах
