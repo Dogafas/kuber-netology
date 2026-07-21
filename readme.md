@@ -1,142 +1,149 @@
-# Домашнее задание к занятию «Helm»
+# Домашнее задание к занятию «Компоненты Kubernetes»
 
-## Задание 1. Подготовить Helm-чарт для приложения
+## Задание: Необходимо определить требуемые ресурсы
 
-### Настройка kubectl для MicroK8s
+### 1. Расчёт ресурсов по компонентам
 
-```
-export KUBECONFIG=/var/snap/microk8s/current/credentials/client.config
-```
+#### База данных
 
-### Создание Helm‑чарта
+* На одну копию:
 
-```
-helm create myapp
-```
+  - CPU: 1 ядро
 
-- Удалить ненужные шаблоны (serviceaccount.yaml, hpa.yaml, httproute.yaml), если они не используются.
+  - RAM: 4 ГБ
 
-### Настройка [values.yaml](myapp/values.yaml)
+* 3 копии:
 
-### Генерация TLS‑сертификата
+  - CPU: 3 ядра
+  - RAM: 12 ГБ
 
-```
-openssl req -x509 -nodes -days 365 -newkey rsa:2048 \
-  -keyout tls.key -out tls.crt \
-  -subj "/CN=myapp.example.com/O=myapp"
-```
+#### Кеш
 
-### Создание TLS‑секрета
+* На одну копию:
 
-```
-kubectl create secret tls tls-secret \
-  --cert=tls.crt \
-  --key=tls.key \
-  --namespace=default
-```
+  - CPU: 1 ядро
+  - RAM: 4 ГБ
 
-### Установка Helm‑релиза
+* 3 копии:
+  - CPU: 3 ядра 
+  - RAM: 12 ГБ
 
-```
-helm install webapp ./myapp
+#### Фронтенд
 
-# или, если релиз уже установлен:
+* На одну копию:
+  - CPU: 0.2 ядра
+  - RAM: 50 МБ ≈ 0.05 ГБ
 
-helm upgrade webapp ./myapp
-```
+* 5 копий:
+  - CPU: 5⋅0.2 = 1 ядро
+  - RAM: 5⋅0.05 = 0.25 ГБ
 
-### Проверка ресурсов
+#### Бекенд
 
-```
-helm list
-kubectl get all
-kubectl get ingress
-kubectl describe ingress webapp-ingress
-```
+* На одну копию:
+  - CPU: 1 ядро
+  - RAM: 0.6 ГБ
+  - 
+* 10 копий:
+  - CPU: 10 ядер
+  - RAM: 6 ГБ
 
-### Перезапуск Traefik Pod (если нужно)
+#### Итого по приложению (без запаса):
+* CPU: 3+3+1+10=17 ядер
+* RAM: 12+12+0.25+6=30.25 ГБ
 
-```
-kubectl delete pod -n ingress <traefik-pod-name>
-```
+Округлим: 17 vCPU и 31 ГБ RAM.
 
-### Тестирование доступа
+1. Количество рабочих нод без запаса
+Нужно решить, какие ноды брать. Возьмём типовой размер для прод‑кластера, например:
 
-```
-curl http://myapp.example.com
+1 нода: 8 vCPU, 16 ГБ RAM
 
-# или если используется proxy
+Тогда:
 
-curl -k --noproxy '*' https://myapp.example.com
-```
+2 ноды: 16 vCPU, 32 ГБ RAM → по CPU впритык, по RAM нормально
 
-### Скриншоты
-![alt text](image-2.png)
-продолжение скриншота ...
-![alt text](image-3.png)
----
+3 ноды: 24 vCPU, 48 ГБ RAM → комфортнее, есть место под служебные ресурсы и буфер.
 
-## Задание 2. Запустить две версии в разных неймспейсах
+Для нормальной работы и размещения отказоустойчивых компонентов (DB, cache) лучше считать минимум 3 рабочие ноды.
 
-### Создание неймспейсов
+3. Запас на выход из строя одной ноды
+Если одна нода падает, оставшиеся должны выдержать нагрузку.
 
-```
-kubectl create namespace app1
+При 3 нодах по 8 vCPU / 16 ГБ:
 
-kubectl create namespace app2
-```
+Всего: 24 vCPU, 48 ГБ
 
-### Проверка
+При падении одной ноды остаётся: 16 vCPU, 32 ГБ
 
-```
-kubectl get ns
-```
+А нам нужно: 17 vCPU и 31 ГБ RAM → не хватает CPU.
 
-### Установка релизов Helm
+Значит, надо либо:
 
-```
-  # Две версии в namespace app1
+увеличить размер нод, либо
 
-helm install webapp-v1 ./myapp -n app1
+увеличить количество нод.
 
-helm install webapp-v2 ./myapp -n app1
+Выберем вариант:
 
-  # Одна версия в namespace app2
+4 ноды по 8 vCPU / 16 ГБ RAM:
 
-helm install webapp-v3 ./myapp -n app2
-```
+Всего: 32 vCPU, 64 ГБ
 
-### Проверка всех релизов
+При падении одной ноды: 24 vCPU, 48 ГБ
 
-```
-helm list -A
-```
+Требование: 17 vCPU, 31 ГБ → запас есть и по CPU, и по RAM.
 
-### Проверка ресурсов в namespace app1
+4. Служебные ресурсы (Kubernetes, мониторинг, логирование)
+На каждой ноде что‑то съедают:
 
-```
-kubectl get all -n app1
-```
+kubelet, kube-proxy, CNI, CSI
 
-### Проверка ресурсов в namespace app2
+DaemonSet’ы: логирование, мониторинг, security‑агенты
 
-```
-kubectl get all -n app2
-```
+Реалистично заложить:
 
-### Скриншоты
+~1 vCPU и 2 ГБ RAM на ноду под служебные нужды.
 
-![alt text](image.png)
-продолжение скриншота ...
-![alt text](image-1.png)
+Тогда на 4 нодах:
 
-### Удаление всех релизов
+Служебные ресурсы: 4 vCPU, 8 ГБ RAM
 
-```
-helm uninstall webapp-v1 -n app1
-helm uninstall webapp-v2 -n app1
-helm uninstall webapp-v3 -n app2
-helm uninstall webapp -n default
-kubectl delete namespace app1
-kubectl delete namespace app2
-```
+Полезные ресурсы для приложений:
+
+CPU: 
+32
+−
+4
+=
+28
+ vCPU
+
+RAM: 
+64
+−
+8
+=
+56
+ ГБ
+
+Требования приложения: 17 vCPU, 31 ГБ → всё комфортно помещается, остаётся запас.
+
+5. Итог: параметры кластера
+Рабочие ноды:
+
+Количество: 4
+
+Параметры каждой ноды:
+
+CPU: 8 vCPU
+
+RAM: 16 ГБ
+
+Гарантии:
+
+При падении одной ноды остаётся: 24 vCPU, 48 ГБ
+
+С учётом служебных ресурсов: ~20 vCPU, ~40 ГБ под приложение
+
+Требование приложения: 17 vCPU, 31 ГБ → выдерживает.
